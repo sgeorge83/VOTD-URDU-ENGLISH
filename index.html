@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="theme-color" content="#0f0f0f">
+  <meta name="description" content="Daily bilingual Bible verse in Urdu and English — E-GEEK CREATIONS">
+  <title>Verse of the Day</title>
+  <link rel="manifest" href="manifest.json">
+  <link rel="icon" href="icons/icon-192.png" type="image/png">
+  <link rel="apple-touch-icon" href="icons/icon-192.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Nastaliq+Urdu:wght@400;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <main class="page">
+    <article class="glass-card" aria-live="polite">
+      <p class="eyebrow">Verse of the Day</p>
+
+      <div id="loader" class="loader">Loading verse…</div>
+
+      <div id="content" class="content hidden">
+        <section id="urdu-section" class="verse-block urdu-block" dir="rtl" lang="ur" aria-label="Urdu verse">
+          <p id="urdu-verse" class="verse-text urdu-text"></p>
+        </section>
+
+        <section id="english-section" class="verse-block english-block" dir="ltr" lang="en" aria-label="English verse">
+          <p id="english-verse" class="verse-text english-text"></p>
+        </section>
+
+        <p id="reference" class="reference"></p>
+        <p id="date-label" class="date-label"></p>
+
+        <div class="actions">
+          <button id="copy-btn" type="button">Copy</button>
+          <button id="share-btn" type="button">Share</button>
+        </div>
+      </div>
+
+      <p id="error" class="error hidden" role="alert"></p>
+
+      <footer class="footer">
+        <p class="brand">E-GEEK CREATIONS</p>
+        <p class="disclaimer">
+          English reference from
+          <a href="https://labs.bible.org/" target="_blank" rel="noopener noreferrer">labs.bible.org</a>
+          (NET Bible). Urdu text from Urdu Geo Version, licensed under
+          <a href="https://creativecommons.org/licenses/by-nc-nd/4.0/" target="_blank" rel="noopener noreferrer">CC BY-NC-ND 4.0</a>.
+        </p>
+      </footer>
+    </article>
+  </main>
+
+  <script src="app.js" defer></script>
+</body>
+</html>

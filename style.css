@@ -1,0 +1,213 @@
+/* BASE */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  min-height: 100dvh;
+  font-family: system-ui, -apple-system, "Segoe UI", Arial, sans-serif;
+  background: radial-gradient(circle at top, #1a1a1a, #0f0f0f);
+  color: #fff;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 16px;
+  padding: max(16px, env(safe-area-inset-top)) max(16px, env(safe-area-inset-right))
+    max(16px, env(safe-area-inset-bottom)) max(16px, env(safe-area-inset-left));
+}
+
+.page {
+  width: 100%;
+  display: flex;
+  justify-content: center;
+}
+
+/* CARD */
+.glass-card {
+  width: 100%;
+  max-width: 420px;
+  padding: 24px 22px;
+  border-radius: 18px;
+  background: rgba(255, 255, 255, 0.06);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.4);
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  animation: fadeIn 0.5s ease;
+}
+
+.eyebrow {
+  margin: 0;
+  font-size: 11px;
+  letter-spacing: 1.8px;
+  text-transform: uppercase;
+  opacity: 0.55;
+}
+
+.content {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+/* VERSE BLOCKS */
+.verse-block {
+  text-align: center;
+  padding: 14px 12px;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.urdu-block {
+  border-right: 2px solid rgba(255, 255, 255, 0.18);
+}
+
+.english-block {
+  border-left: 2px solid rgba(255, 255, 255, 0.12);
+}
+
+.verse-text {
+  margin: 0;
+  line-height: 1.75;
+}
+
+.urdu-text {
+  font-family: "Noto Nastaliq Urdu", "Jameel Noori Nastaleeq", serif;
+  font-size: clamp(18px, 4.8vw, 22px);
+  direction: rtl;
+  unicode-bidi: plaintext;
+}
+
+.english-text {
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 16px;
+  line-height: 1.65;
+  color: #f0f0f0;
+}
+
+/* REFERENCE + DATE */
+.reference {
+  margin: 4px 0 0;
+  font-size: 14px;
+  opacity: 0.85;
+  line-height: 1.5;
+}
+
+.date-label {
+  margin: 0;
+  font-size: 12px;
+  opacity: 0.55;
+}
+
+/* LOADER / ERROR */
+.loader {
+  font-size: 14px;
+  opacity: 0.6;
+  animation: pulse 1.2s infinite;
+}
+
+.error {
+  margin: 0;
+  font-size: 13px;
+  color: #ffb4b4;
+  line-height: 1.5;
+}
+
+.hidden {
+  display: none !important;
+}
+
+/* ACTIONS */
+.actions {
+  display: flex;
+  gap: 8px;
+  justify-content: center;
+  margin-top: 4px;
+}
+
+.actions button {
+  flex: 1;
+}
+
+button {
+  padding: 10px 14px;
+  border: none;
+  border-radius: 10px;
+  background: #2d6cdf;
+  color: #fff;
+  cursor: pointer;
+  font-weight: 500;
+  font-size: 14px;
+  transition: transform 0.2s ease, opacity 0.2s ease;
+}
+
+button:hover {
+  transform: translateY(-1px);
+  opacity: 0.92;
+}
+
+button:active {
+  transform: scale(0.97);
+}
+
+button:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+  transform: none;
+}
+
+/* FOOTER */
+.footer {
+  margin-top: 4px;
+}
+
+.brand {
+  margin: 0;
+  font-size: 12px;
+  opacity: 0.4;
+  letter-spacing: 2px;
+}
+
+.disclaimer {
+  margin: 8px 0 0;
+  font-size: 11px;
+  line-height: 1.45;
+  font-family: Georgia, "Times New Roman", serif;
+  font-style: italic;
+  opacity: 0.85;
+}
+
+.disclaimer a {
+  color: #9ec5ff;
+}
+
+/* ANIMATIONS */
+@keyframes pulse {
+  0% { opacity: 0.3; }
+  50% { opacity: 0.8; }
+  100% { opacity: 0.3; }
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@media (min-width: 480px) {
+  .glass-card {
+    padding: 28px 26px;
+  }
+}
