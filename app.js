@@ -1,5 +1,6 @@
 const API_URL = "https://urdu-bible-api.vercel.app/votd?include_english=true";
 const CACHE_KEY = "votd_urdu_english";
+const FETCH_TIMEOUT_MS = 15000;
 
 const loaderEl = document.getElementById("loader");
 const contentEl = document.getElementById("content");
@@ -60,47 +61,71 @@ function buildShareText(data) {
   const urduRef = formatUrduReference(data.reference);
   const date = formatDisplayDate(data.date);
 
-  return [
-    urdu,
-    "",
-    english,
-    "",
-    `${englishRef} | ${urduRef}`,
-    date,
-  ].join("\n");
+  return [urdu, "", english, "", `${englishRef} | ${urduRef}`, date].join("\n");
 }
 
 function renderVerse(data) {
+  if (!data || typeof data !== "object") {
+    throw new Error("Invalid verse data");
+  }
+
   currentPayload = data;
 
-  urduVerseEl.textContent = joinVerseTexts(data.verses || [], "text");
-  englishVerseEl.textContent = joinVerseTexts(data.english_verses || [], "text");
+  if (urduVerseEl) {
+    urduVerseEl.textContent = joinVerseTexts(data.verses || [], "text");
+  }
+  if (englishVerseEl) {
+    englishVerseEl.textContent = joinVerseTexts(data.english_verses || [], "text");
+  }
 
   const englishRef = data.reference?.english || "";
   const urduRef = formatUrduReference(data.reference);
-  referenceEnglishEl.textContent = englishRef;
-  referenceUrduEl.textContent = urduRef;
-  dateLabelEl.textContent = formatDisplayDate(data.date);
 
-  loaderEl.classList.add("hidden");
-  errorEl.classList.add("hidden");
-  contentEl.classList.remove("hidden");
+  if (referenceEnglishEl) referenceEnglishEl.textContent = englishRef;
+  if (referenceUrduEl) referenceUrduEl.textContent = urduRef;
+  if (dateLabelEl) dateLabelEl.textContent = formatDisplayDate(data.date);
+
+  errorEl?.classList.add("hidden");
+  contentEl?.classList.remove("hidden");
 }
 
 function showError(message) {
-  errorEl.textContent = message;
-  errorEl.classList.remove("hidden");
-  loaderEl.classList.add("hidden");
+  if (errorEl) {
+    errorEl.textContent = message;
+    errorEl.classList.remove("hidden");
+  }
+}
+
+function hideLoader() {
+  loaderEl?.classList.add("hidden");
+}
+
+async function fetchWithTimeout(url, timeoutMs = FETCH_TIMEOUT_MS) {
+  const controller = new AbortController();
+  const timer = window.setTimeout(() => controller.abort(), timeoutMs);
+
+  try {
+    return await fetch(url, {
+      headers: { Accept: "application/json" },
+      signal: controller.signal,
+    });
+  } finally {
+    window.clearTimeout(timer);
+  }
 }
 
 async function fetchVerse() {
-  loaderEl.classList.remove("hidden");
-  errorEl.classList.add("hidden");
+  const isInitialLoad = !currentPayload;
+
+  if (isInitialLoad) {
+    loaderEl?.classList.remove("hidden");
+    contentEl?.classList.add("hidden");
+  }
+
+  errorEl?.classList.add("hidden");
 
   try {
-    const response = await fetch(API_URL, {
-      headers: { Accept: "application/json" },
-    });
+    const response = await fetchWithTimeout(API_URL);
 
     if (!response.ok) {
       throw new Error(`Could not load verse (${response.status})`);
@@ -111,13 +136,25 @@ async function fetchVerse() {
     localStorage.setItem(CACHE_KEY, JSON.stringify(data));
   } catch (err) {
     const cached = localStorage.getItem(CACHE_KEY);
+
     if (cached) {
-      renderVerse(JSON.parse(cached));
-      showError("Showing cached verse. Could not refresh from the server.");
-      return;
+      try {
+        renderVerse(JSON.parse(cached));
+        showError("Showing cached verse. Could not refresh from the server.");
+        return;
+      } catch {
+        localStorage.removeItem(CACHE_KEY);
+      }
     }
 
-    showError(err.message || "Could not load today's verse.");
+    const message =
+      err.name === "AbortError"
+        ? "Request timed out. Check your connection and refresh."
+        : err.message || "Could not load today's verse.";
+
+    showError(message);
+  } finally {
+    hideLoader();
   }
 }
 
@@ -164,13 +201,13 @@ function registerServiceWorker() {
 
   window.addEventListener("load", () => {
     navigator.serviceWorker.register("./sw.js").catch(() => {
-      // PWA install still works in many browsers without SW; fail silently.
+      // Offline shell is optional; the app still works without it.
     });
   });
 }
 
-copyBtn.addEventListener("click", copyVerse);
-shareBtn.addEventListener("click", shareVerse);
+copyBtn?.addEventListener("click", copyVerse);
+shareBtn?.addEventListener("click", shareVerse);
 
 registerServiceWorker();
 fetchVerse();

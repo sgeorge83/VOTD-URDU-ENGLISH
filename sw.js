@@ -1,6 +1,5 @@
-const CACHE_NAME = "votd-urdu-english-v2";
-const STATIC_ASSETS = [
-  "./",
+const CACHE_NAME = "votd-urdu-english-v3";
+const PRECACHE = [
   "./index.html",
   "./style.css",
   "./app.js",
@@ -11,7 +10,7 @@ const STATIC_ASSETS = [
 
 self.addEventListener("install", (event) => {
   event.waitUntil(
-    caches.open(CACHE_NAME).then((cache) => cache.addAll(STATIC_ASSETS))
+    caches.open(CACHE_NAME).then((cache) => cache.addAll(PRECACHE))
   );
   self.skipWaiting();
 });
@@ -19,47 +18,54 @@ self.addEventListener("install", (event) => {
 self.addEventListener("activate", (event) => {
   event.waitUntil(
     caches.keys().then((keys) =>
-      Promise.all(
-        keys.filter((key) => key !== CACHE_NAME).map((key) => caches.delete(key))
-      )
+      Promise.all(keys.filter((key) => key !== CACHE_NAME).map((key) => caches.delete(key)))
     )
   );
   self.clients.claim();
 });
 
+function isAppShellRequest(url, request) {
+  return (
+    request.mode === "navigate" ||
+    url.pathname.endsWith(".html") ||
+    url.pathname.endsWith(".js")
+  );
+}
+
 self.addEventListener("fetch", (event) => {
-  const { request } = event;
+  if (event.request.method !== "GET") return;
 
-  if (request.method !== "GET") return;
+  const url = new URL(event.request.url);
+  if (url.origin !== self.location.origin) return;
 
-  const url = new URL(request.url);
-
-  if (url.origin.includes("urdu-bible-api.vercel.app")) {
+  if (isAppShellRequest(url, event.request)) {
     event.respondWith(
-      fetch(request)
-        .then((response) => response)
+      fetch(event.request)
+        .then((response) => {
+          if (response.ok) {
+            const copy = response.clone();
+            caches.open(CACHE_NAME).then((cache) => cache.put(event.request, copy));
+          }
+          return response;
+        })
         .catch(() =>
-          caches.match(request).then((cached) => cached || Response.error())
+          caches.match(event.request).then((cached) => cached || caches.match("./index.html"))
         )
     );
     return;
   }
 
-  if (url.origin !== self.location.origin) return;
-
   event.respondWith(
-    caches.match(request).then((cached) => {
-      const networkFetch = fetch(request)
-        .then((response) => {
-          if (response && response.status === 200) {
-            const copy = response.clone();
-            caches.open(CACHE_NAME).then((cache) => cache.put(request, copy));
-          }
-          return response;
-        })
-        .catch(() => cached);
+    caches.match(event.request).then((cached) => {
+      if (cached) return cached;
 
-      return cached || networkFetch;
+      return fetch(event.request).then((response) => {
+        if (response.ok) {
+          const copy = response.clone();
+          caches.open(CACHE_NAME).then((cache) => cache.put(event.request, copy));
+        }
+        return response;
+      });
     })
   );
 });
