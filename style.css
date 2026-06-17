@@ -1,4 +1,4 @@
-/* BASE */
+/* BASE — desktop-first layout */
 *,
 *::before,
 *::after {
@@ -8,116 +8,170 @@
 body {
   margin: 0;
   min-height: 100vh;
-  min-height: 100dvh;
   font-family: system-ui, -apple-system, "Segoe UI", Arial, sans-serif;
-  background: radial-gradient(circle at top, #1a1a1a, #0f0f0f);
+  background:
+    radial-gradient(circle at 15% 0%, rgba(45, 108, 223, 0.12), transparent 42%),
+    radial-gradient(circle at 85% 100%, rgba(255, 255, 255, 0.04), transparent 38%),
+    linear-gradient(160deg, #151515 0%, #0b0b0b 100%);
   color: #fff;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  padding: 16px;
-  padding: max(16px, env(safe-area-inset-top)) max(16px, env(safe-area-inset-right))
-    max(16px, env(safe-area-inset-bottom)) max(16px, env(safe-area-inset-left));
 }
 
 .page {
-  width: 100%;
+  min-height: 100vh;
   display: flex;
   justify-content: center;
+  padding: 48px 40px;
+}
+
+.app-shell {
+  width: min(980px, 100%);
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+/* HEADER */
+.app-header {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 24px;
+}
+
+.header-copy {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.eyebrow {
+  margin: 0;
+  font-size: 13px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  opacity: 0.55;
+}
+
+.date-label {
+  margin: 0;
+  font-size: 15px;
+  opacity: 0.72;
 }
 
 /* CARD */
 .glass-card {
   width: 100%;
-  max-width: 420px;
-  padding: 24px 22px;
-  border-radius: 18px;
+  padding: 40px 44px;
+  border-radius: 20px;
   background: rgba(255, 255, 255, 0.06);
-  backdrop-filter: blur(14px);
-  -webkit-backdrop-filter: blur(14px);
-  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.4);
-  text-align: center;
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  box-shadow: 0 18px 48px rgba(0, 0, 0, 0.35);
   animation: fadeIn 0.5s ease;
-}
-
-.eyebrow {
-  margin: 0;
-  font-size: 11px;
-  letter-spacing: 1.8px;
-  text-transform: uppercase;
-  opacity: 0.55;
 }
 
 .content {
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 28px;
 }
 
-/* VERSE BLOCKS */
+/* VERSE GRID */
+.verse-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 28px;
+}
+
 .verse-block {
-  text-align: center;
-  padding: 14px 12px;
-  border-radius: 12px;
+  padding: 28px 26px;
+  border-radius: 16px;
   background: rgba(255, 255, 255, 0.04);
 }
 
 .urdu-block {
-  border-right: 2px solid rgba(255, 255, 255, 0.18);
+  border-top: 2px solid rgba(255, 255, 255, 0.18);
 }
 
 .english-block {
-  border-left: 2px solid rgba(255, 255, 255, 0.12);
+  border-top: 2px solid rgba(45, 108, 223, 0.55);
+}
+
+.verse-label {
+  margin: 0 0 16px;
+  font-size: 12px;
+  letter-spacing: 1.6px;
+  text-transform: uppercase;
+  opacity: 0.45;
+  font-weight: 600;
+}
+
+.urdu-block .verse-label {
+  text-align: right;
 }
 
 .verse-text {
   margin: 0;
-  line-height: 1.75;
 }
 
 .urdu-text {
   font-family: "Noto Nastaliq Urdu", "Jameel Noori Nastaleeq", serif;
-  font-size: clamp(18px, 4.8vw, 22px);
+  font-size: 26px;
+  line-height: 1.9;
   direction: rtl;
   unicode-bidi: plaintext;
+  text-align: right;
 }
 
 .english-text {
   font-family: Georgia, "Times New Roman", serif;
-  font-size: 16px;
-  line-height: 1.65;
+  font-size: 21px;
+  line-height: 1.75;
   color: #f0f0f0;
 }
 
-/* REFERENCE + DATE */
+/* REFERENCE */
 .reference {
-  margin: 4px 0 0;
-  font-size: 14px;
-  opacity: 0.85;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 10px 14px;
+  margin: 0;
+  padding-top: 8px;
+  font-size: 16px;
+  opacity: 0.88;
   line-height: 1.5;
 }
 
-.date-label {
-  margin: 0;
-  font-size: 12px;
-  opacity: 0.55;
+.ref-english {
+  font-weight: 500;
+}
+
+.ref-urdu {
+  font-family: "Noto Nastaliq Urdu", "Jameel Noori Nastaleeq", serif;
+  font-size: 18px;
+}
+
+.ref-separator {
+  opacity: 0.45;
 }
 
 /* LOADER / ERROR */
 .loader {
-  font-size: 14px;
+  font-size: 16px;
   opacity: 0.6;
+  text-align: center;
+  padding: 48px 0;
   animation: pulse 1.2s infinite;
 }
 
 .error {
   margin: 0;
-  font-size: 13px;
+  font-size: 14px;
   color: #ffb4b4;
   line-height: 1.5;
+  text-align: center;
 }
 
 .hidden {
@@ -127,17 +181,12 @@ body {
 /* ACTIONS */
 .actions {
   display: flex;
-  gap: 8px;
-  justify-content: center;
-  margin-top: 4px;
-}
-
-.actions button {
-  flex: 1;
+  gap: 10px;
+  flex-shrink: 0;
 }
 
 button {
-  padding: 10px 14px;
+  padding: 11px 20px;
   border: none;
   border-radius: 10px;
   background: #2d6cdf;
@@ -154,7 +203,7 @@ button:hover {
 }
 
 button:active {
-  transform: scale(0.97);
+  transform: scale(0.98);
 }
 
 button:disabled {
@@ -165,7 +214,9 @@ button:disabled {
 
 /* FOOTER */
 .footer {
-  margin-top: 4px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
 }
 
 .brand {
@@ -176,12 +227,13 @@ button:disabled {
 }
 
 .disclaimer {
-  margin: 8px 0 0;
-  font-size: 11px;
-  line-height: 1.45;
+  margin: 0;
+  max-width: 760px;
+  font-size: 12px;
+  line-height: 1.5;
   font-family: Georgia, "Times New Roman", serif;
   font-style: italic;
-  opacity: 0.85;
+  opacity: 0.82;
 }
 
 .disclaimer a {
@@ -206,8 +258,56 @@ button:disabled {
   }
 }
 
-@media (min-width: 480px) {
+/* TABLET / MOBILE ADJUSTMENTS */
+@media (max-width: 860px) {
+  .page {
+    padding: 32px 24px;
+  }
+
+  .app-header {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .actions {
+    width: 100%;
+  }
+
+  .actions button {
+    flex: 1;
+  }
+
+  .verse-grid {
+    grid-template-columns: 1fr;
+  }
+
   .glass-card {
-    padding: 28px 26px;
+    padding: 28px 24px;
+  }
+
+  .urdu-text {
+    font-size: 22px;
+  }
+
+  .english-text {
+    font-size: 18px;
+  }
+}
+
+@media (max-width: 520px) {
+  .page {
+    padding: 20px 16px;
+  }
+
+  .glass-card {
+    padding: 22px 18px;
+  }
+
+  .urdu-text {
+    font-size: 20px;
+  }
+
+  .english-text {
+    font-size: 17px;
   }
 }

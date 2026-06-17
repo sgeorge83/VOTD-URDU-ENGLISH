@@ -5,7 +5,8 @@ const loaderEl = document.getElementById("loader");
 const contentEl = document.getElementById("content");
 const urduVerseEl = document.getElementById("urdu-verse");
 const englishVerseEl = document.getElementById("english-verse");
-const referenceEl = document.getElementById("reference");
+const referenceEnglishEl = document.getElementById("reference-english");
+const referenceUrduEl = document.getElementById("reference-urdu");
 const dateLabelEl = document.getElementById("date-label");
 const errorEl = document.getElementById("error");
 const copyBtn = document.getElementById("copy-btn");
@@ -29,7 +30,7 @@ function formatVerseRange(verses) {
 function formatUrduReference(ref) {
   if (!ref) return "";
   const range = formatVerseRange(ref.verses);
-  return `${ref.book_name_urdu} ${ref.chapter}:${range}`;
+  return `${ref.book_name_urdu} ${ref.chapter}: ${range}`;
 }
 
 function formatDisplayDate(isoDate) {
@@ -77,7 +78,8 @@ function renderVerse(data) {
 
   const englishRef = data.reference?.english || "";
   const urduRef = formatUrduReference(data.reference);
-  referenceEl.textContent = `${englishRef} | ${urduRef}`;
+  referenceEnglishEl.textContent = englishRef;
+  referenceUrduEl.textContent = urduRef;
   dateLabelEl.textContent = formatDisplayDate(data.date);
 
   loaderEl.classList.add("hidden");

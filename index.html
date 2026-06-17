@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="theme-color" content="#0f0f0f">
   <meta name="description" content="Daily bilingual Bible verse in Urdu and English — E-GEEK CREATIONS">
   <title>Verse of the Day</title>
@@ -16,30 +16,43 @@
 </head>
 <body>
   <main class="page">
-    <article class="glass-card" aria-live="polite">
-      <p class="eyebrow">Verse of the Day</p>
-
-      <div id="loader" class="loader">Loading verse…</div>
-
-      <div id="content" class="content hidden">
-        <section id="urdu-section" class="verse-block urdu-block" dir="rtl" lang="ur" aria-label="Urdu verse">
-          <p id="urdu-verse" class="verse-text urdu-text"></p>
-        </section>
-
-        <section id="english-section" class="verse-block english-block" dir="ltr" lang="en" aria-label="English verse">
-          <p id="english-verse" class="verse-text english-text"></p>
-        </section>
-
-        <p id="reference" class="reference"></p>
-        <p id="date-label" class="date-label"></p>
-
+    <div class="app-shell">
+      <header class="app-header">
+        <div class="header-copy">
+          <p class="eyebrow">Verse of the Day</p>
+          <p id="date-label" class="date-label"></p>
+        </div>
         <div class="actions">
           <button id="copy-btn" type="button">Copy</button>
           <button id="share-btn" type="button">Share</button>
         </div>
-      </div>
+      </header>
 
-      <p id="error" class="error hidden" role="alert"></p>
+      <article class="glass-card" aria-live="polite">
+        <div id="loader" class="loader">Loading verse…</div>
+
+        <div id="content" class="content hidden">
+          <div class="verse-grid">
+            <section id="urdu-section" class="verse-block urdu-block" dir="rtl" lang="ur" aria-label="Urdu verse">
+              <h2 class="verse-label">Urdu</h2>
+              <p id="urdu-verse" class="verse-text urdu-text"></p>
+            </section>
+
+            <section id="english-section" class="verse-block english-block" dir="ltr" lang="en" aria-label="English verse">
+              <h2 class="verse-label">English</h2>
+              <p id="english-verse" class="verse-text english-text"></p>
+            </section>
+          </div>
+
+          <p class="reference">
+            <span id="reference-english" class="ref-english"></span>
+            <span class="ref-separator" aria-hidden="true">·</span>
+            <span id="reference-urdu" class="ref-urdu" dir="rtl" lang="ur"></span>
+          </p>
+        </div>
+
+        <p id="error" class="error hidden" role="alert"></p>
+      </article>
 
       <footer class="footer">
         <p class="brand">E-GEEK CREATIONS</p>
@@ -50,7 +63,7 @@
           <a href="https://creativecommons.org/licenses/by-nc-nd/4.0/" target="_blank" rel="noopener noreferrer">CC BY-NC-ND 4.0</a>.
         </p>
       </footer>
-    </article>
+    </div>
   </main>
 
   <script src="app.js" defer></script>
