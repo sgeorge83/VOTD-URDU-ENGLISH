@@ -35,10 +35,15 @@ Then open the printed local URL in your browser.
 
 ## Deploy (GitHub Pages)
 
-1. Push this repository to `main`.
-2. In GitHub → **Settings** → **Pages**, set **Source** to **Deploy from a branch**.
-3. Choose branch **main** and folder **/ (root)**.
-4. Save. The site will be available at the URL above after the workflow completes.
+Pushes to `main` deploy automatically via [`.github/workflows/pages.yml`](.github/workflows/pages.yml).
+
+**One-time setup:**
+
+1. GitHub → **Settings** → **Pages**
+2. Set **Source** to **GitHub Actions**
+3. Push to `main` (or run the workflow manually under **Actions**)
+
+The site will be live at the URL above after the workflow finishes.
 
 ## Credits & licenses
 
