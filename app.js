@@ -1,6 +1,10 @@
 const API_URL = "https://urdu-bible-api.vercel.app/votd?include_english=true";
 const CACHE_KEY = "votd_urdu_english";
 const FETCH_TIMEOUT_MS = 15000;
+const VOTD_TIMEZONE = "Asia/Dubai";
+const VOTD_REFRESH_HOUR = 9;
+const VOTD_RETRY_MINUTE = 5;
+const BACKGROUND_FETCH_DEBOUNCE_MS = 60000;
 
 const loaderEl = document.getElementById("loader");
 const contentEl = document.getElementById("content");
@@ -14,6 +18,9 @@ const copyBtn = document.getElementById("copy-btn");
 const shareBtn = document.getElementById("share-btn");
 
 let currentPayload = null;
+let lastBackgroundFetchAt = 0;
+let primaryRefreshTimer = null;
+let retryRefreshTimer = null;
 
 function cleanVerseText(text) {
   return String(text || "")
@@ -45,6 +52,59 @@ function formatDisplayDate(isoDate) {
     month: "long",
     year: "numeric",
   }).format(parsed);
+}
+
+function getDateInTimezone(timeZone, date = new Date()) {
+  return new Intl.DateTimeFormat("en-CA", {
+    timeZone,
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  }).format(date);
+}
+
+function getUaeMinutesSinceMidnight(date = new Date()) {
+  const parts = new Intl.DateTimeFormat("en-GB", {
+    timeZone: VOTD_TIMEZONE,
+    hour: "numeric",
+    minute: "numeric",
+    hour12: false,
+  }).formatToParts(date);
+
+  const hour = Number(parts.find((part) => part.type === "hour")?.value ?? 0);
+  const minute = Number(parts.find((part) => part.type === "minute")?.value ?? 0);
+  return hour * 60 + minute;
+}
+
+function getMsUntilUaeTime(hour, minute) {
+  const targetMinutes = hour * 60 + minute;
+  const nowMinutes = getUaeMinutesSinceMidnight();
+  let diffMinutes = targetMinutes - nowMinutes;
+
+  if (diffMinutes <= 0) {
+    diffMinutes += 24 * 60;
+  }
+
+  return diffMinutes * 60 * 1000;
+}
+
+function hasVerseChanged(data) {
+  if (!currentPayload) return true;
+
+  return (
+    currentPayload.date !== data.date ||
+    currentPayload.reference?.english !== data.reference?.english
+  );
+}
+
+function shouldRefreshOnFocus() {
+  if (!currentPayload) return true;
+
+  const uaeToday = getDateInTimezone(VOTD_TIMEZONE);
+  if (currentPayload.date === uaeToday) return false;
+
+  const uaeMinutes = getUaeMinutesSinceMidnight();
+  return uaeMinutes >= VOTD_REFRESH_HOUR * 60;
 }
 
 function joinVerseTexts(items, textKey) {
@@ -114,15 +174,17 @@ async function fetchWithTimeout(url, timeoutMs = FETCH_TIMEOUT_MS) {
   }
 }
 
-async function fetchVerse() {
-  const isInitialLoad = !currentPayload;
+async function fetchVerse({ background = false } = {}) {
+  const isInitialLoad = !currentPayload && !background;
 
   if (isInitialLoad) {
     loaderEl?.classList.remove("hidden");
     contentEl?.classList.add("hidden");
   }
 
-  errorEl?.classList.add("hidden");
+  if (!background) {
+    errorEl?.classList.add("hidden");
+  }
 
   try {
     const response = await fetchWithTimeout(API_URL);
@@ -132,9 +194,18 @@ async function fetchVerse() {
     }
 
     const data = await response.json();
-    renderVerse(data);
     localStorage.setItem(CACHE_KEY, JSON.stringify(data));
+
+    if (hasVerseChanged(data)) {
+      renderVerse(data);
+    } else if (!currentPayload) {
+      renderVerse(data);
+    }
   } catch (err) {
+    if (background && currentPayload) {
+      return;
+    }
+
     const cached = localStorage.getItem(CACHE_KEY);
 
     if (cached) {
@@ -154,8 +225,46 @@ async function fetchVerse() {
 
     showError(message);
   } finally {
-    hideLoader();
+    if (isInitialLoad || !background) {
+      hideLoader();
+    }
   }
+}
+
+function maybeBackgroundRefresh() {
+  if (!shouldRefreshOnFocus()) return;
+
+  const now = Date.now();
+  if (now - lastBackgroundFetchAt < BACKGROUND_FETCH_DEBOUNCE_MS) return;
+
+  lastBackgroundFetchAt = now;
+  fetchVerse({ background: true });
+}
+
+function startUaeRefreshLoop(hour, minute, assignTimer) {
+  const scheduleNext = () => {
+    assignTimer(
+      window.setTimeout(async () => {
+        lastBackgroundFetchAt = Date.now();
+        await fetchVerse({ background: true });
+        scheduleNext();
+      }, getMsUntilUaeTime(hour, minute))
+    );
+  };
+
+  scheduleNext();
+}
+
+function scheduleDailyUaeRefresh() {
+  if (primaryRefreshTimer) window.clearTimeout(primaryRefreshTimer);
+  if (retryRefreshTimer) window.clearTimeout(retryRefreshTimer);
+
+  startUaeRefreshLoop(VOTD_REFRESH_HOUR, 0, (id) => {
+    primaryRefreshTimer = id;
+  });
+  startUaeRefreshLoop(VOTD_REFRESH_HOUR, VOTD_RETRY_MINUTE, (id) => {
+    retryRefreshTimer = id;
+  });
 }
 
 async function copyVerse() {
@@ -206,9 +315,20 @@ function registerServiceWorker() {
   });
 }
 
+function registerRefreshHandlers() {
+  document.addEventListener("visibilitychange", () => {
+    if (document.visibilityState === "visible") {
+      maybeBackgroundRefresh();
+    }
+  });
+
+  window.addEventListener("focus", maybeBackgroundRefresh);
+}
+
 copyBtn?.addEventListener("click", copyVerse);
 shareBtn?.addEventListener("click", shareVerse);
 
 registerServiceWorker();
+registerRefreshHandlers();
+scheduleDailyUaeRefresh();
 fetchVerse();
-setInterval(fetchVerse, 600000);

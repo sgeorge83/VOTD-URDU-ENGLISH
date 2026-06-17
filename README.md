@@ -33,6 +33,16 @@ npx serve .
 
 Then open the printed local URL in your browser.
 
+## Verse refresh schedule
+
+The app loads today's verse on open, then refreshes intelligently instead of polling every few minutes:
+
+- **9:00 AM UAE** — primary daily refresh (when labs.bible.org typically updates)
+- **9:05 AM UAE** — safety retry if the first call is still on yesterday's verse
+- **Tab focus / return** — background refresh if the cached verse date is behind today (after 9:00 AM UAE)
+
+Background refreshes do not show the loading spinner and only re-render when the verse date or reference actually changes.
+
 ## Deploy (GitHub Pages)
 
 Pushes to `main` deploy automatically via [`.github/workflows/pages.yml`](.github/workflows/pages.yml).
