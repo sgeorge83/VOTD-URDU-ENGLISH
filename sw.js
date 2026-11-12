@@ -1,4 +1,4 @@
-const CACHE_NAME = "votd-urdu-english-v5";
+const CACHE_NAME = "votd-urdu-english-v6";
 const PRECACHE = [
   "./index.html",
   "./style.css",

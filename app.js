@@ -1,10 +1,35 @@
-const API_URL = "https://urdu-bible-api.vercel.app/votd?include_english=true";
-const CACHE_KEY = "votd_urdu_english";
+const ENGLISH_API_URL = "https://bible-widget-backend.vercel.app/api/morning";
+const URDU_API_BASE = "https://urdu-bible-api.vercel.app";
+const CACHE_KEY = "votd_urdu_english_esv_v1";
 const FETCH_TIMEOUT_MS = 15000;
 const VOTD_TIMEZONE = "Asia/Dubai";
 const VOTD_REFRESH_HOUR = 9;
 const VOTD_RETRY_MINUTE = 5;
 const BACKGROUND_FETCH_DEBOUNCE_MS = 60000;
+
+const ENGLISH_BOOK_NAMES = [
+  "Genesis", "Exodus", "Leviticus", "Numbers", "Deuteronomy",
+  "Joshua", "Judges", "Ruth", "1 Samuel", "2 Samuel",
+  "1 Kings", "2 Kings", "1 Chronicles", "2 Chronicles", "Ezra",
+  "Nehemiah", "Esther", "Job", "Psalm", "Proverbs",
+  "Ecclesiastes", "Song of Solomon", "Isaiah", "Jeremiah", "Lamentations",
+  "Ezekiel", "Daniel", "Hosea", "Joel", "Amos",
+  "Obadiah", "Jonah", "Micah", "Nahum", "Habakkuk",
+  "Zephaniah", "Haggai", "Zechariah", "Malachi",
+  "Matthew", "Mark", "Luke", "John", "Acts",
+  "Romans", "1 Corinthians", "2 Corinthians", "Galatians", "Ephesians",
+  "Philippians", "Colossians", "1 Thessalonians", "2 Thessalonians", "1 Timothy",
+  "2 Timothy", "Titus", "Philemon", "Hebrews", "James",
+  "1 Peter", "2 Peter", "1 John", "2 John", "3 John",
+  "Jude", "Revelation",
+];
+
+const BOOK_ALIASES = {
+  psalms: "Psalm",
+  "song of songs": "Song of Solomon",
+  "canticles": "Song of Solomon",
+  "apocalypse": "Revelation",
+};
 
 const loaderEl = document.getElementById("loader");
 const contentEl = document.getElementById("content");
@@ -25,6 +50,21 @@ let retryRefreshTimer = null;
 function cleanVerseText(text) {
   return String(text || "")
     .replace(/^\u00B6\s*/, "")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+function cleanEsvText(esvText, reference) {
+  let text = String(esvText || "").trim();
+
+  if (reference) {
+    const escaped = reference.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+    text = text.replace(new RegExp(`^${escaped}\\s*`, "i"), "");
+  }
+
+  return text
+    .replace(/\[\d+\]\s*/g, "")
+    .replace(/\s*\(ESV\)\s*$/i, "")
     .replace(/\s+/g, " ")
     .trim();
 }
@@ -88,12 +128,62 @@ function getMsUntilUaeTime(hour, minute) {
   return diffMinutes * 60 * 1000;
 }
 
+function englishBookToId(bookName) {
+  const normalized = String(bookName || "")
+    .trim()
+    .replace(/\s+/g, " ")
+    .toLowerCase();
+
+  const aliased = BOOK_ALIASES[normalized] || bookName;
+  const aliasNormalized = String(aliased).trim().toLowerCase();
+
+  const index = ENGLISH_BOOK_NAMES.findIndex(
+    (name) => name.toLowerCase() === aliasNormalized
+  );
+
+  return index === -1 ? null : index + 1;
+}
+
+function parseEnglishReference(reference) {
+  const match = String(reference || "")
+    .trim()
+    .match(/^(.+?)\s+(\d+):(\d+)(?:-(\d+))?$/);
+
+  if (!match) {
+    throw new Error(`Could not parse reference: ${reference}`);
+  }
+
+  const bookName = match[1].trim();
+  const bookId = englishBookToId(bookName);
+  if (!bookId) {
+    throw new Error(`Unknown book name: ${bookName}`);
+  }
+
+  const chapter = Number(match[2]);
+  const startVerse = Number(match[3]);
+  const endVerse = match[4] ? Number(match[4]) : startVerse;
+  const verses = [];
+
+  for (let verse = startVerse; verse <= endVerse; verse += 1) {
+    verses.push(verse);
+  }
+
+  return {
+    english: `${ENGLISH_BOOK_NAMES[bookId - 1]} ${chapter}:${formatVerseRange(verses)}`,
+    book_id: bookId,
+    book_name_english: ENGLISH_BOOK_NAMES[bookId - 1],
+    chapter,
+    verses,
+  };
+}
+
 function hasVerseChanged(data) {
   if (!currentPayload) return true;
 
   return (
     currentPayload.date !== data.date ||
-    currentPayload.reference?.english !== data.reference?.english
+    currentPayload.reference?.english !== data.reference?.english ||
+    currentPayload.english_text !== data.english_text
   );
 }
 
@@ -116,7 +206,7 @@ function joinVerseTexts(items, textKey) {
 
 function buildShareText(data) {
   const urdu = joinVerseTexts(data.verses || [], "text");
-  const english = joinVerseTexts(data.english_verses || [], "text");
+  const english = data.english_text || "";
   const englishRef = data.reference?.english || "";
   const urduRef = formatUrduReference(data.reference);
   const date = formatDisplayDate(data.date);
@@ -130,7 +220,7 @@ function buildShareText(data) {
     date,
     "",
     "Urdu: Urdu Geo Version",
-    "English: NET Bible",
+    "English: ESV",
     "WordOnAir Labs",
   ].join("\n");
 }
@@ -146,7 +236,7 @@ function renderVerse(data) {
     urduVerseEl.textContent = joinVerseTexts(data.verses || [], "text");
   }
   if (englishVerseEl) {
-    englishVerseEl.textContent = joinVerseTexts(data.english_verses || [], "text");
+    englishVerseEl.textContent = data.english_text || "";
   }
 
   const englishRef = data.reference?.english || "";
@@ -185,6 +275,52 @@ async function fetchWithTimeout(url, timeoutMs = FETCH_TIMEOUT_MS) {
   }
 }
 
+async function fetchJson(url) {
+  const response = await fetchWithTimeout(url);
+  if (!response.ok) {
+    throw new Error(`Could not load ${url} (${response.status})`);
+  }
+  return response.json();
+}
+
+async function fetchUrduVerses(bookId, chapter, verses) {
+  const results = await Promise.all(
+    verses.map((verse) =>
+      fetchJson(`${URDU_API_BASE}/books/${bookId}/chapters/${chapter}/verses/${verse}`)
+    )
+  );
+  return results;
+}
+
+async function loadTodayVerse() {
+  const morning = await fetchJson(ENGLISH_API_URL);
+  const reference = String(morning.reference || "").trim();
+  if (!reference || !morning.esv_text) {
+    throw new Error("Morning API did not return a verse");
+  }
+
+  const parsed = parseEnglishReference(reference);
+  const urduVerses = await fetchUrduVerses(
+    parsed.book_id,
+    parsed.chapter,
+    parsed.verses
+  );
+
+  return {
+    date: getDateInTimezone(VOTD_TIMEZONE),
+    reference: {
+      ...parsed,
+      book_name_urdu: urduVerses[0]?.book_name || "",
+    },
+    english_text: cleanEsvText(morning.esv_text, reference),
+    verses: urduVerses,
+    source: {
+      english_provider: "bible-widget-backend / ESV",
+      urdu_provider: "urdu-bible-api",
+    },
+  };
+}
+
 async function fetchVerse({ background = false } = {}) {
   const isInitialLoad = !currentPayload && !background;
 
@@ -198,13 +334,7 @@ async function fetchVerse({ background = false } = {}) {
   }
 
   try {
-    const response = await fetchWithTimeout(API_URL);
-
-    if (!response.ok) {
-      throw new Error(`Could not load verse (${response.status})`);
-    }
-
-    const data = await response.json();
+    const data = await loadTodayVerse();
     localStorage.setItem(CACHE_KEY, JSON.stringify(data));
 
     if (hasVerseChanged(data)) {
@@ -302,7 +432,6 @@ async function shareVerse() {
 
   if (navigator.share) {
     try {
-      // Share text only — no webpage URL, so WhatsApp does not append a GitHub link.
       await navigator.share({ title, text });
     } catch (err) {
       if (err.name !== "AbortError") {

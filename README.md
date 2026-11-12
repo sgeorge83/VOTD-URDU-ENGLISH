@@ -15,13 +15,19 @@ A bilingual, installable Progressive Web App that shows today’s Bible verse in
 
 ## API
 
-The app reads from:
+English (reference + ESV text only) from:
 
 ```
-GET https://urdu-bible-api.vercel.app/votd?include_english=true
+GET https://bible-widget-backend.vercel.app/api/morning
 ```
 
-No backend is required in this repository.
+Matching Urdu verses from:
+
+```
+GET https://urdu-bible-api.vercel.app/books/{book_id}/chapters/{chapter}/verses/{verse}
+```
+
+Only `reference` and `esv_text` are used from the morning API. No backend is required in this repository.
 
 ## Local preview
 
@@ -37,7 +43,7 @@ Then open the printed local URL in your browser.
 
 The app loads today's verse on open, then refreshes intelligently instead of polling every few minutes:
 
-- **9:00 AM UAE** — primary daily refresh (when labs.bible.org typically updates)
+- **9:00 AM UAE** — primary daily refresh
 - **9:05 AM UAE** — safety retry if the first call is still on yesterday's verse
 - **Tab focus / return** — background refresh if the cached verse date is behind today (after 9:00 AM UAE)
 
@@ -58,5 +64,5 @@ The site will be live at the URL above after the workflow finishes.
 ## Credits & licenses
 
 - **Brand:** WordOnAir Labs
-- **English reference:** [labs.bible.org](https://labs.bible.org/) (NET Bible)
+- **English:** ESV® Bible (via bible-widget-backend morning API)
 - **Urdu text:** Urdu Geo Version — [CC BY-NC-ND 4.0](https://creativecommons.org/licenses/by-nc-nd/4.0/)
