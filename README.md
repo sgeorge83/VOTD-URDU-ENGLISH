@@ -57,6 +57,6 @@ The site will be live at the URL above after the workflow finishes.
 
 ## Credits & licenses
 
-- **Brand:** E-GEEK CREATIONS
+- **Brand:** WordOnAir Labs
 - **English reference:** [labs.bible.org](https://labs.bible.org/) (NET Bible)
 - **Urdu text:** Urdu Geo Version — [CC BY-NC-ND 4.0](https://creativecommons.org/licenses/by-nc-nd/4.0/)

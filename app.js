@@ -121,7 +121,18 @@ function buildShareText(data) {
   const urduRef = formatUrduReference(data.reference);
   const date = formatDisplayDate(data.date);
 
-  return [urdu, "", english, "", `${englishRef} | ${urduRef}`, date].join("\n");
+  return [
+    urdu,
+    "",
+    english,
+    "",
+    `${englishRef} | ${urduRef}`,
+    date,
+    "",
+    "Urdu: Urdu Geo Version",
+    "English: NET Bible",
+    "WordOnAir Labs",
+  ].join("\n");
 }
 
 function renderVerse(data) {
@@ -288,11 +299,11 @@ async function shareVerse() {
 
   const text = buildShareText(currentPayload);
   const title = "Verse of the Day";
-  const url = window.location.href;
 
   if (navigator.share) {
     try {
-      await navigator.share({ title, text, url });
+      // Share text only — no webpage URL, so WhatsApp does not append a GitHub link.
+      await navigator.share({ title, text });
     } catch (err) {
       if (err.name !== "AbortError") {
         showError("Share failed.");
